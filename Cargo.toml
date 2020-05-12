@@ -1,0 +1,8 @@
+[package]
+name = "rust_one_file_example"
+version = "0.1.0"
+authors = ["yangzhang214024 <yangzhang214024@sohu-inc.com>"]
+edition = "2018"
+
+[dependencies]
+regex="*"
