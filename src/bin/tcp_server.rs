@@ -8,6 +8,7 @@ fn handle_client(mut stream: TcpStream){
         Ok(size) => {
             // echo everything!
             stream.write(&data[0..size]).unwrap();
+            println!("buffer len {}", data.len());
             true
         },
         Err(_) => {

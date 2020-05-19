@@ -1,5 +1,5 @@
 use std::net::{TcpStream};
-use std::io::{self, Read, Write};
+use std::io::{self, BufRead, Read, Write};
 use std::str::from_utf8;
 
 fn main() {
@@ -7,19 +7,27 @@ fn main() {
     let stdin = io::stdin();
     let mut handle = stdin.lock();
 
-    handle.read_to_string(&mut buffer).unwrap();
+    handle.read_line(&mut buffer).unwrap();
 
-    let send_buffer = buffer.as_bytes();
+    // buffer.len() - trim_buffer.len() = 2, why? '\r\n' maybe?
+    let mut trim_buffer = buffer.trim_end();
 
-    let length = send_buffer.len();
+    println!("input {}", &trim_buffer);
 
-    let size_header = length.to_be_bytes();
+    let send_buffer = trim_buffer.as_bytes();
+
+    let length = send_buffer.len() as u32;
+
+    let size_header = length.to_le_bytes();
+    println!("size_header len {}", size_header.len());
+
+    println!("before match");
 
     match TcpStream::connect("localhost:5555") {
         Ok(mut stream) => {
             println!("Successfully connected to server");
 
-            stream.write(size_header).unwrap();
+            stream.write(&size_header).unwrap();
             stream.write(send_buffer).unwrap();
 
             println!("data sent");
@@ -44,9 +52,4 @@ fn main() {
         }
     }
     println!("Terminated.");
-
-
-
-
-
 }
