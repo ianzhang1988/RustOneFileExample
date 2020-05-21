@@ -1,6 +1,5 @@
 use std::net::{TcpStream};
-use std::io::{self, BufRead, Read, Write};
-use std::str::from_utf8;
+use std::io::{self, BufRead, Write};
 
 fn main() {
     let mut buffer = String::new();

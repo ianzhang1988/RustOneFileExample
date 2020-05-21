@@ -1,14 +1,15 @@
 use std::thread;
 use std::net::{TcpListener, TcpStream, Shutdown};
-use std::io::{Read, Write};
+use std::io::{Read};
 use std::convert::TryInto;
 use std::str::from_utf8;
 
 fn read_le_u32_simple(input: &[u8]) -> u32 {
-    let (int_bytes, rest) = input.split_at(std::mem::size_of::<u32>());
+    let (int_bytes, _rest) = input.split_at(std::mem::size_of::<u32>());
     u32::from_le_bytes(int_bytes.try_into().unwrap())
 }
 
+#[allow(dead_code)]
 fn read_le_u32(input: &mut &[u8]) -> u32 {
     let (int_bytes, rest) = input.split_at(std::mem::size_of::<u32>());
     *input = rest;
@@ -18,7 +19,7 @@ fn read_le_u32(input: &mut &[u8]) -> u32 {
 // todo: implement a struct Frame for buffer, header as so on
 
 fn handle_client(mut stream: TcpStream){
-    let mut header_leanth: usize = 4;
+    let header_leanth: usize = 4;
     let mut body_size = 0;
     // buffer for incoming frame
     let mut data = Vec::<u8>::new();
