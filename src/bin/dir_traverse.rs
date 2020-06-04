@@ -2,7 +2,7 @@ use std::fs::{read_dir, DirEntry};
 use std::io;
 use std::string::String;
 use std::path::{Path, PathBuf};
-use std::path::Prefix::Verbatim;
+// use std::path::Prefix::Verbatim;
 
 fn list_dir<P:AsRef<Path>>( path: P) -> io::Result<()> {
     for entry in read_dir(path)? {
@@ -27,7 +27,7 @@ fn walk_dir_recursive<P:AsRef<Path>>( path: P, entrys: &mut Vec<DirEntry>) -> io
         entrys.push(entry);
 
         if let Some(p) = path {
-            walk_dir_recursive(p, entrys);
+            walk_dir_recursive(p, entrys)?;
         }
     }
 
