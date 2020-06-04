@@ -16,7 +16,7 @@ fn read_le_u32(input: &mut &[u8]) -> u32 {
     u32::from_le_bytes(int_bytes.try_into().unwrap())
 }
 
-// todo: implement a struct Frame for buffer, header as so on
+// todo: implement a struct Frame for buffer, header and so on
 
 fn handle_client(mut stream: TcpStream){
     let header_leanth: usize = 4;
@@ -42,7 +42,8 @@ fn handle_client(mut stream: TcpStream){
                 // write buffer to frame (data buffer)
                 data.extend(&buffer[0..size]);
 
-                if data.len() > header_leanth { // make sure we have enough data for header
+                // make sure we have enough data for header
+                if data.len() > header_leanth {
 
                     // read body size from header
                     if  body_size < 1 {
@@ -72,7 +73,7 @@ fn handle_client(mut stream: TcpStream){
                             left[0..next_frame_len].copy_from_slice(&right);
                         }
 
-                        // set all 'pointers' in right place
+                        // set all 'pointers' in right place for data, release memory if needed
                         data.truncate(next_frame_len);
                         data.shrink_to_fit();
 
