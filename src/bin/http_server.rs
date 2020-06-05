@@ -102,9 +102,13 @@ async fn query(bytes: Bytes, data: web::Data<Arc<Mutex<MyData>>>) -> impl Respon
 
     let json_data = String::from_utf8(bytes.to_vec()).map_err(|_| HttpResponse::BadRequest().finish())?;
     let v: Value = serde_json::from_str(json_data.as_str()).map_err(|_| HttpResponse::BadRequest().finish())?;
-    let id: String = v["id"].to_string();
+    let id: String = v["id"].as_str().ok_or(HttpResponse::BadRequest().finish())?.to_string();
+
+    println!("id: {:?}", id);
 
     let person_map = data.lock().unwrap();
+
+    println!("person_map: {:?}", person_map);
 
     let json: serde_json::Value;
 
