@@ -4,10 +4,14 @@ use std::io::{Read};
 use std::convert::TryInto;
 use std::str::from_utf8;
 
-// use std::rc::Rc;
-// use std::cell::Cell;
-// use std::borrow::{BorrowMut, Borrow};
-// use std::mem::swap;
+/// Frame::add_data(mut self, in_data: &[u8]) -> Self {}
+/// **xxx(mut self) -> Self** vs **xxx(&mut self)** let call it patten A vs B
+/// using patten A, it like:
+///     foo = foo.bar()
+///     foo = foo.boo()
+/// in this way, function bar can have self, so bar can move member of foo
+/// this not allowed in patten B, bar in patten B would have &mut self
+/// a mut reference as parameter, can move things out from borrowed reference
 
 fn read_le_u32_simple(input: &[u8]) -> u32 {
     let (int_bytes, _rest) = input.split_at(std::mem::size_of::<u32>());
@@ -110,7 +114,6 @@ impl Frame {
         }
 
         self
-
     }
 
     fn process_data(mut self, func : fn(&[u8])) -> Self {

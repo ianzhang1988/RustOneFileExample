@@ -4,10 +4,9 @@ use std::io::{Read};
 use std::convert::TryInto;
 use std::str::from_utf8;
 
-// use std::rc::Rc;
 use std::cell::RefCell;
-// use std::borrow::{BorrowMut, Borrow};
-// use std::mem::swap;
+
+/// using std::cell::RefCell exchange buffer in Frame
 
 fn read_le_u32_simple(input: &[u8]) -> u32 {
     let (int_bytes, _rest) = input.split_at(std::mem::size_of::<u32>());
