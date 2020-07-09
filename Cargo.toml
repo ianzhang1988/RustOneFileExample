@@ -13,3 +13,5 @@ serde_json = "1"
 env_logger = "0.6.0"
 reqwest = { version = "0.10", features = ["blocking","json"] }
 tokio = { version = "0.2", features = ["full"] }
+crossbeam = "0.7"
+rand="*"
