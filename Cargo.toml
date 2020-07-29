@@ -15,3 +15,5 @@ reqwest = { version = "0.10", features = ["blocking","json"] }
 tokio = { version = "0.2", features = ["full"] }
 crossbeam = "0.7"
 rand="*"
+amiquip = "0.3"
+uuid = { version = "0.8", features = ["serde", "v4"] }

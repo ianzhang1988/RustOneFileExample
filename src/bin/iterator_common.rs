@@ -36,6 +36,7 @@ fn find_prime(n:u32) {
     println!("prime_nums {:?}", prime_nums);
 }
 
+
 fn main() {
     println!("sum {}", sum_to(10));
     test_into_iter();
