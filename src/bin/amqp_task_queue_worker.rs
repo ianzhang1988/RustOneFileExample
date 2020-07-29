@@ -1,7 +1,8 @@
-use amiquip::{Connection, ConsumerMessage, ConsumerOptions, QueueDeclareOptions, Result};
+use amiquip::{Connection, ConsumerMessage, ConsumerOptions, QueueDeclareOptions};
 use std::thread;
 use std::time::Duration;
 use serde_json::{self, Value };
+use anyhow::Result;
 
 const TASK_QUEUE: &'static str = "task_queue";
 
@@ -36,7 +37,7 @@ fn main() -> Result<()> {
                 // let dits = delivery.body.iter().filter(|&&b| b == b'.').count();
 
                 // how can we unify this error?
-                let v: Value = serde_json::from_str(&body).unwrap();
+                let v: Value = serde_json::from_str(&body)?;
 
                 if let Some(sec) = v["work"].as_u64() {
                     thread::sleep(Duration::from_secs(sec as u64));
