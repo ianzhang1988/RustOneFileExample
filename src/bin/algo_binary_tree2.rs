@@ -201,8 +201,25 @@ impl <'a, T: Ord + std::fmt::Display + std::fmt::Debug> IntoIterator for &'a Nod
     }
 }
 
+struct Foo{
+    value:u32,
+    flag: bool
+}
+
+struct Bar{
+    stack: Vec<Foo>
+}
 
 fn main() {
+    let mut b = Bar{ stack:Vec::new() };
+    b.stack.push(Foo {value:1, flag:true});
+    b.stack.push(Foo {value:2, flag:false});
+
+    // forgot about xxx_mut, shame on me...
+    let last = b.stack.last_mut().unwrap();
+    last.value=10;
+    last.flag=true;
+
     let mut b_tree = NodeType::<u32>::new();
     b_tree.insert(2);
     b_tree.insert(0);

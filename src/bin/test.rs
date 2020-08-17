@@ -207,12 +207,6 @@ struct Bar{
     stack: Vec<Foo>
 }
 
-impl Bar{
-    // fn push(&mut self, f: Foo) {
-    //     self.stack.push(f);
-    // }
-}
-
 
 fn main() {
 

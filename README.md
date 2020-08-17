@@ -19,5 +19,8 @@ algo_binary_tree.rs
 ### iterator
 how implement iterator for new type
 
+<font color="red">also</font>, when using container like vec, don't forget about xxx_mut function,  
+when try to change value (or struct) inside vec
+
 **file**:  
 algo_binary_tree2.rs
