@@ -1,78 +1,270 @@
-#![feature(box_patterns)]
+use std::cmp::Ordering;
 
-struct Node<T: PartialOrd> {
-    value: T,
-    left: Option<Box<Node<T>>>,
-    right: Option<Box<Node<T>>>,
+#[derive(Debug)]
+enum NodeType<T: Ord> {
+    Node{
+        v:T,
+        n:u32,
+        l:Box<NodeType<T>>,
+        r:Box<NodeType<T>>
+    },
+    Null,
 }
 
-struct NodeIterator<T: PartialOrd> {
-    stack: Vec<Node<T>>,
-    next: Option<T>,
-}
+use NodeType::Null;
+use NodeType::Node;
+use std::borrow::Borrow;
 
-impl<T: PartialOrd> IntoIterator for Node<T> {
-    type Item = T;
-    type IntoIter = NodeIterator<T>;
 
-    fn into_iter(self) -> Self::IntoIter {
-        let mut stack = Vec::new();
+impl <T: Ord> NodeType<T> {
+    fn new()->NodeType<T> {
+        Null
+    }
 
-        let smallest = pop_smallest(self, &mut stack);
+    fn insert(&mut self, ov:T) {
+        match self {
+            &mut Node{ ref v, ref mut n, ref mut l, ref mut r } => {
+                match v.cmp(&ov) {
+                    Ordering::Less=> {
+                        r.insert(ov);
+                    },
+                    Ordering::Greater=>{
+                        l.insert(ov);
+                    },
+                    _ => {return}
+                }
+                *n = l.size()+r.size()+1;
+            },
+            Null => {
+                *self = Node{v:ov, n:1, l:Box::new(Null), r:Box::new(Null)}
+            }
+        }
+    }
 
-        NodeIterator { stack: stack, next: Some(smallest) }
+    fn size(&self)-> u32 {
+        match self {
+            Node {n, ..} => *n,
+            Null => 0
+        }
     }
 }
 
-impl<T: PartialOrd> Iterator for NodeIterator<T> {
-    type Item = T;
+// struct RefNodeIterator<'a,T: Ord + 'a> {
+//     stack: Vec<&'a NodeType<T>>,
+//     // next: Option<T>,
+// }
+//
+// impl<'a, T: Ord + 'a + std::fmt::Display + std::fmt::Debug> Iterator for RefNodeIterator<'a, T> {
+//     type Item = &'a T;
+//
+//     fn next(&mut self) -> Option<&'a T> {
+//         println!("next 1");
+//         if let Some(last) = self.stack.last() {
+//
+//             println!("next 1.1 {:?}", self.stack);
+//
+//             match last {
+//                 Node{ l, r, v, ..} => {
+//                     println!("next 1.1.1 {}", v);
+//                     match ( l.borrow(),  r.borrow()) {
+//                         (Node {..}, _)=>{
+//                                 println!("next 1.2");
+//                                 self.stack.push(l.borrow());
+//                                 self.next();  // dead loop
+//                             },
+//                         (Null, Node {..})=>{
+//                                 println!("next 1.3");
+//                                 self.stack.pop();
+//                                 self.stack.push(r.borrow());
+//                                 return Some(v);
+//                             },
+//                         (Null, Null)=>{
+//                                 println!("next 1.4");
+//                                 self.stack.pop();
+//                                 return Some(v);
+//                             },
+//                     }
+//
+//                 },
+//                 Null => return None
+//             }
+//         }
+//
+//         println!("next 2");
+//         None
+//     }
+// }
+//
+// impl <'a, T: Ord + std::fmt::Display + std::fmt::Debug> IntoIterator for &'a NodeType<T>{
+//     type Item= &'a T;
+//     type IntoIter = RefNodeIterator<'a, T>;
+//
+//     fn into_iter(self) -> Self::IntoIter {
+//         println!("IntoIterator");
+//         let mut stack = Vec::new();
+//         stack.push(self);
+//         RefNodeIterator{ stack: stack }
+//     }
+// }
 
-    fn next(&mut self) -> Option<T> {
-        if let Some(next) = self.next.take() {
-            return Some(next);
-        }
+#[derive(Debug)]
+struct NodeIteratorItem<'a,T: Ord + 'a> {
+    node_ref: &'a NodeType<T>,
+    ban_left: bool // is there a way to avoid cell?
+}
 
-        if let Some(Node { value, right, .. }) = self.stack.pop() {
-            if let Some(right) = right {
-                let box right = right;
-                self.stack.push(right);
+struct RefNodeIterator<'a,T: Ord + 'a> {
+    stack: Vec<NodeIteratorItem<'a, T>>,
+    // next: Option<T>,
+}
+
+impl<'a, T: Ord + 'a + std::fmt::Display + std::fmt::Debug> Iterator for RefNodeIterator<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<&'a T> {
+        // println!("next 1 ---------------------------------");
+        if let Some( NodeIteratorItem{ node_ref, ban_left}) = self.stack.last_mut() {
+
+            let last = node_ref;
+
+            // println!("next 1.1 {:?}", self.stack);
+            // println!("next 1.1 node {:?}", self.stack.last());
+
+            match last {
+                Node{ l, r, v, ..} => {
+                    // println!("next 1.1.1 {}", v);
+                    match ( l.borrow(),  r.borrow()) {
+                        (Node {..}, Node {..})=>{
+                                // println!("next 1.2");
+
+                                if *ban_left {
+                                    self.stack.pop();
+                                    self.stack.push(NodeIteratorItem{ node_ref:r.borrow(), ban_left: false });
+                                    return Some(v);
+                                }
+
+                                *ban_left = true;
+                                self.stack.push(NodeIteratorItem{ node_ref:l.borrow(), ban_left: false });
+
+                                return self.next();
+                            },
+                        (Node {..}, Null)=>{
+                                // println!("next 1.2 {}", ban_left.get());
+
+                                if *ban_left {
+                                    // println!("next 1.2.1");
+                                    self.stack.pop();
+                                    return Some(v);
+                                }
+
+                                // println!("next 1.2.2");
+
+                                *ban_left = true;
+                                self.stack.push(NodeIteratorItem{ node_ref:l.borrow(), ban_left: false});
+                                return self.next();
+                            },
+                        (Null, Node {..})=>{
+                                // println!("next 1.3");
+                                self.stack.pop();
+                                self.stack.push(NodeIteratorItem{ node_ref:r.borrow(), ban_left: false});
+                                return Some(v);
+                            },
+                        (Null, Null)=>{
+                                // println!("next 1.4");
+                                self.stack.pop();
+                                return Some(v);
+                            },
+                    }
+
+                },
+                Null => return None
             }
-            return Some(value);
         }
 
+        // println!("next 2");
         None
     }
 }
 
-fn pop_smallest<T: PartialOrd>(node: Node<T>, stack: &mut Vec<Node<T>>) -> T {
-    let Node { value, left, right } = node;
+impl <'a, T: Ord + std::fmt::Display + std::fmt::Debug> IntoIterator for &'a NodeType<T>{
+    type Item= &'a T;
+    type IntoIter = RefNodeIterator<'a, T>;
 
-    if let Some(left) = left {
-        stack.push(Node { value: value, left: None, right: right });
-        let box left = left;
-        return pop_smallest(left, stack);
+    fn into_iter(self) -> Self::IntoIter {
+        println!("IntoIterator");
+        let mut stack = Vec::new();
+        stack.push(NodeIteratorItem{ node_ref:self, ban_left: false});
+        RefNodeIterator{ stack: stack }
     }
-
-    if let Some(right) = right {
-        let box right = right;
-        stack.push(right);
-    }
-
-    value
 }
 
-fn main() {
-    let root = Node {
-        value: 4,
-        left: Some(Box::new(Node { value: 2,
-            left: Some(Box::new(Node { value: 1, left: None, right: None })),
-            right: Some(Box::new(Node { value: 3, left: Some(Box::new(Node { value: 10, left: None, right: None })), right: None }) )})),
-        right: Some(Box::new(Node { value: 6,
-            left: Some(Box::new(Node { value: 5, left: None, right: None })),
-            right: Some(Box::new(Node { value: 7, left: None, right: None }) )}))
-    };
+struct Foo{
+    value:u32,
+    flag: bool
+}
 
-    for t in root {
-        println!("{}", t);
+struct Bar{
+    stack: Vec<Foo>
+}
+
+impl Bar{
+    // fn push(&mut self, f: Foo) {
+    //     self.stack.push(f);
+    // }
+}
+
+
+fn main() {
+
+    let mut b = Bar{ stack:Vec::new() };
+    b.stack.push(Foo {value:1, flag:true});
+    b.stack.push(Foo {value:2, flag:false});
+
+    let last = b.stack.last_mut().unwrap();
+    last.value=10;
+    last.flag=true;
+
+    let mut b_tree = NodeType::<u32>::new();
+    b_tree.insert(2);
+    b_tree.insert(0);
+    b_tree.insert(1);
+    b_tree.insert(3);
+    b_tree.insert(4);
+
+    println!("{:?}", &b_tree);
+
+    // for i in &b_tree {
+    //     println!("+++++++++ {}", i);
+    // }
+
+    // let it = &mut b_tree.into_iter();
+    // it.next();
+    // it.next();
+    // it.next();
+    // it.next();
+    // it.next();
+    // it.next();
+
+    let mut b_tree = NodeType::<u32>::new();
+    b_tree.insert(8);
+    b_tree.insert(4);
+    b_tree.insert(2);
+    b_tree.insert(5);
+    b_tree.insert(1);
+    b_tree.insert(3);
+    b_tree.insert(6);
+    b_tree.insert(7);
+    b_tree.insert(12);
+    b_tree.insert(10);
+    b_tree.insert(14);
+    b_tree.insert(9);
+    b_tree.insert(11);
+    b_tree.insert(13);
+    b_tree.insert(15);
+
+    println!("{:?}", &b_tree);
+
+    for i in &b_tree {
+        println!("+++++++++ {}", i);
     }
 }

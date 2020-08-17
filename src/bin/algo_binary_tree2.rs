@@ -111,7 +111,7 @@ impl <T: Ord> NodeType<T> {
 #[derive(Debug)]
 struct NodeIteratorItem<'a,T: Ord + 'a> {
     node_ref: &'a NodeType<T>,
-    ban_left: Cell<bool> // is there a way to avoid cell?
+    ban_left: Cell<bool> // is there a way to avoid cell? // yes, use self.stack.last_mut() see comment below
 }
 
 struct RefNodeIterator<'a,T: Ord + 'a> {
@@ -124,6 +124,8 @@ impl<'a, T: Ord + 'a + std::fmt::Display + std::fmt::Debug> Iterator for RefNode
 
     fn next(&mut self) -> Option<&'a T> {
         // println!("next 1 ---------------------------------");
+
+        // let Some(xxx) = self.stack.last_mut() { this can avoid Cell
         if let Some( NodeIteratorItem{ node_ref, ban_left}) = self.stack.last() {
 
             let last = node_ref;
