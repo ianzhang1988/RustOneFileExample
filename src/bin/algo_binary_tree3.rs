@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::cell::{Cell,RefCell};
+use std::cell::{RefCell};
 
 #[derive(Debug)]
 enum NodeType<T: Ord> {
@@ -14,7 +14,6 @@ enum NodeType<T: Ord> {
 
 use NodeType::Null;
 use NodeType::Node;
-use std::borrow::{Borrow, BorrowMut};
 use std::ops::DerefMut;
 
 

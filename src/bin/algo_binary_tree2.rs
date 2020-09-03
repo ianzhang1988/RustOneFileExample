@@ -42,9 +42,6 @@ impl <T: Ord> NodeType<T> {
         }
     }
 
-    fn _insert(&mut self, node: Self) {
-        //
-    }
 
     fn size(&self)-> u32 {
         match self {
@@ -93,7 +90,11 @@ impl <T: Ord> NodeType<T> {
     //         false
     //     }
     // }
-    //
+
+    // fn _insert(&mut self, node: Self) {
+    //     // nothing for now
+    // }
+
     // fn _delete(&mut self, ov:T) -> Option<(NodeType<T>, NodeType<T>)> {
     //     match self {
     //         // &mut Node {ref v, ref mut l, ref mut r,..} => {
